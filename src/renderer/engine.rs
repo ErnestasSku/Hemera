@@ -1,6 +1,9 @@
 use winit::window::Window;
 
-use crate::renderer::{primitives::{image::Image, vertex::Vertex}, scenes::scene::ImageScene};
+use crate::renderer::{
+    primitives::{image::Image, vertex::Vertex},
+    scenes::scene::ImageScene,
+};
 
 use super::scenes::scene::SceneType;
 
@@ -12,6 +15,9 @@ pub struct Engine {
     pub size: winit::dpi::PhysicalSize<u32>,
     pub render_pipeline: wgpu::RenderPipeline,
     pub scene: Option<SceneType>,
+
+    //Winit
+    pub window: Window,
 }
 
 impl Engine {
@@ -137,19 +143,56 @@ impl Engine {
             multiview: None,
         });
 
-        let scene = Some(SceneType::Image(ImageScene {
-            image: Image::test(&device, &queue),
-        }));
+        let mut image = Image::test(&device, &queue);
+        image.create_bind_group(&device);
+        image.create_index_buffer(&device);
+        image.create_vertex_buffer(&device);
 
+        let image_scene = ImageScene { image };
+
+        let scene = Some(SceneType::Image(image_scene));
+
+        // println!("Created");
         Self {
             config,
             device,
             queue,
             render_pipeline,
             scene,
-            surface, 
-            size
+            surface,
+            size,
+            window,
+        }
+    }
+
+    pub fn update(&mut self) {}
+
+    pub fn render(&mut self) -> Result<(), wgpu::SurfaceError> {
+        let output = self.surface.get_current_texture()?;
+        let view = output
+            .texture
+            .create_view(&wgpu::TextureViewDescriptor::default());
+
+        let mut encoder = self
+            .device
+            .create_command_encoder(&wgpu::CommandEncoderDescriptor {
+                label: Some("Render Encoder"),
+            });
+
+        // println!("Prepare render");
+        {
+            self.scene.as_mut().map(|v| match v {
+                SceneType::Image(img) => {
+                    img.render_scene(&mut encoder, &view, &self.render_pipeline, &self.device)
+                }
+            });
         }
 
+        // println!("After render");
+
+        self.queue.submit(std::iter::once(encoder.finish()));
+        output.present();
+
+        Ok(())
     }
 }
