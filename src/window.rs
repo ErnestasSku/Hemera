@@ -4,17 +4,20 @@ use winit::{
     window::WindowBuilder,
 };
 
+use crate::renderer::engine::Engine;
+
 pub async fn run() {
     env_logger::init();
     let event_loop = EventLoop::new();
     let window = WindowBuilder::new().build(&event_loop).unwrap();
 
     // let mut state = State::new(window).await;
-
+    let mut engine = Engine::new(window).await;
+    
     event_loop.run(move |event, _, control_flow| {
         match event {
             Event::RedrawRequested(window_id) => {
-                
+
                 // state.update();
                 // match state.render() {
                 //     Ok(_) => {}

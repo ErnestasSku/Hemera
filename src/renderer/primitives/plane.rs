@@ -1,8 +1,8 @@
 use super::vertex::Vertex;
 
 #[derive(Debug, Clone)]
-struct Plane {
-    vertices: Vec<Vertex>,
+pub struct Plane {
+    pub vertices: Vec<Vertex>,
 }
 
 trait PlaneVertex {
@@ -11,7 +11,29 @@ trait PlaneVertex {
 }
 
 impl Plane {
-    pub fn new(scale: f32, x_offset: f32, y_offset: f32) -> Self {
+    pub fn new(scale: f32) -> Self {
+        let vertices = vec![
+            Vertex {
+                position: [-scale, -scale, 0.0],
+                tex_coords: [0.0, 1.0],
+            },
+            Vertex {
+                position: [scale, -scale, 0.0],
+                tex_coords: [1.0, 1.0],
+            },
+            Vertex {
+                position: [scale, scale, 0.0],
+                tex_coords: [1.0, 0.0],
+            },
+            Vertex {
+                position: [-scale, scale, 0.0],
+                tex_coords: [0.0, 0.0],
+            },
+        ];
+        Plane { vertices }
+    }
+
+    pub fn new_with_offset(scale: f32, x_offset: f32, y_offset: f32) -> Self {
         let vertices = vec![
             Vertex {
                 position: [-scale + x_offset, -scale + y_offset, 0.0],
