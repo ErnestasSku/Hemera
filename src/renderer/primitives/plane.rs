@@ -77,8 +77,8 @@ impl Plane {
         self.vertices.clone()
     }
 
-    pub fn get_indices(&self) -> Vec<u32> {
-        vec![0, 1, 2, 0, 1, 3]
+    pub fn get_indices(&self) -> Vec<u16> {
+        vec![0, 1, 2, 0, 2, 3]
     }
 }
 

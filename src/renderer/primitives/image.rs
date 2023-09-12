@@ -15,7 +15,7 @@ pub struct Image {
 impl Image {
     pub fn test(device: &Device, queue: &wgpu::Queue) -> Self {
         Image {
-            plane: Plane::new(1.0),
+            plane: Plane::new(0.5),
             texture: Texture::from_bytes(
                 device,
                 queue,

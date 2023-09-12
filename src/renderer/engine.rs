@@ -144,7 +144,7 @@ impl Engine {
         });
 
         let mut image = Image::test(&device, &queue);
-        image.create_bind_group(&device);
+        image.create_bind_group(&device, &texture_bind_group_layout);
         image.create_index_buffer(&device);
         image.create_vertex_buffer(&device);
 
