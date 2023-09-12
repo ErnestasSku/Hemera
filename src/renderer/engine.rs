@@ -1,3 +1,4 @@
+use wgpu::Queue;
 use winit::window::Window;
 
 use crate::renderer::{
@@ -5,7 +6,7 @@ use crate::renderer::{
     scenes::scene::ImageScene,
 };
 
-use super::scenes::scene::SceneType;
+use super::scenes::scene::{SceneType, TestImageScene};
 
 pub struct Engine {
     pub surface: wgpu::Surface,
@@ -143,26 +144,40 @@ impl Engine {
             multiview: None,
         });
 
-        let mut image = Image::test(&device, &queue);
-        image.create_bind_group(&device, &texture_bind_group_layout);
-        image.create_index_buffer(&device);
-        image.create_vertex_buffer(&device);
-
-        let image_scene = ImageScene { image };
-
-        let scene = Some(SceneType::Image(image_scene));
-
         // println!("Created");
         Self {
             config,
             device,
             queue,
             render_pipeline,
-            scene,
+            scene: None,
             surface,
             size,
             window,
         }
+    }
+
+    pub fn load_scene(&mut self) {
+        let device = &self.device;
+        let queue = &self.queue;
+
+        let image1 = Image::test(&device, &queue, 0.1, 0.7, 0.7);
+        let image2 = Image::test(&device, &queue, 0.2, 0.0, 0.0);
+        let image3 = Image::test(&device, &queue, 0.3, -0.7, 0.2);
+
+        let mut images = vec![image1, image2, image3];
+
+        for image in images.iter_mut() {
+            image.create_bind_group(&device);
+            image.create_index_buffer(&device);
+            image.create_vertex_buffer(&device);
+        }
+
+
+        let image_scene = TestImageScene { images };
+
+        let scene = Some(SceneType::TestImages(image_scene));
+        self.scene = scene;
     }
 
     pub fn update(&mut self) {}
@@ -185,6 +200,8 @@ impl Engine {
                 SceneType::Image(img) => {
                     img.render_scene(&mut encoder, &view, &self.render_pipeline, &self.device)
                 }
+                SceneType::TestImages(img) => img.render_scene(&mut encoder, &view, &self.render_pipeline, &self.device),
+                SceneType::Gif(_) => todo!(),
             });
         }
 

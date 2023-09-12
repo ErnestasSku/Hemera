@@ -13,9 +13,9 @@ pub struct Image {
 }
 
 impl Image {
-    pub fn test(device: &Device, queue: &wgpu::Queue) -> Self {
+    pub fn test(device: &Device, queue: &wgpu::Queue, scale: f32, x: f32, y: f32) -> Self {
         Image {
-            plane: Plane::new(0.5),
+            plane: Plane::new_with_offset(scale, x, y),
             texture: Texture::from_bytes(
                 device,
                 queue,
@@ -47,31 +47,31 @@ impl Image {
         self.index_buffer = Some(index_buffer);
     }
 
-    pub fn create_bind_group(&mut self, device: &Device, texture_bind_group_layout: &BindGroupLayout) {
-        // let texture_bind_group_layout =
-        //     device.create_bind_group_layout(&wgpu::BindGroupLayoutDescriptor {
-        //         entries: &[
-        //             wgpu::BindGroupLayoutEntry {
-        //                 binding: 0,
-        //                 visibility: wgpu::ShaderStages::FRAGMENT,
-        //                 ty: wgpu::BindingType::Texture {
-        //                     multisampled: false,
-        //                     view_dimension: wgpu::TextureViewDimension::D2,
-        //                     sample_type: wgpu::TextureSampleType::Float { filterable: true },
-        //                 },
-        //                 count: None,
-        //             },
-        //             wgpu::BindGroupLayoutEntry {
-        //                 binding: 1,
-        //                 visibility: wgpu::ShaderStages::FRAGMENT,
-        //                 // This should match the filterable field of the
-        //                 // corresponding Texture entry above.
-        //                 ty: wgpu::BindingType::Sampler(wgpu::SamplerBindingType::Filtering),
-        //                 count: None,
-        //             },
-        //         ],
-        //         label: Some("texture_bind_group_layout"),
-        //     });
+    pub fn create_bind_group(&mut self, device: &Device) {
+        let texture_bind_group_layout =
+            device.create_bind_group_layout(&wgpu::BindGroupLayoutDescriptor {
+                entries: &[
+                    wgpu::BindGroupLayoutEntry {
+                        binding: 0,
+                        visibility: wgpu::ShaderStages::FRAGMENT,
+                        ty: wgpu::BindingType::Texture {
+                            multisampled: false,
+                            view_dimension: wgpu::TextureViewDimension::D2,
+                            sample_type: wgpu::TextureSampleType::Float { filterable: true },
+                        },
+                        count: None,
+                    },
+                    wgpu::BindGroupLayoutEntry {
+                        binding: 1,
+                        visibility: wgpu::ShaderStages::FRAGMENT,
+                        // This should match the filterable field of the
+                        // corresponding Texture entry above.
+                        ty: wgpu::BindingType::Sampler(wgpu::SamplerBindingType::Filtering),
+                        count: None,
+                    },
+                ],
+                label: Some("texture_bind_group_layout"),
+            });
 
         let diffuse_bind_group = device.create_bind_group(&wgpu::BindGroupDescriptor {
             layout: &texture_bind_group_layout,
