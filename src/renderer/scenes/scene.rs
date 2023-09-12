@@ -141,8 +141,7 @@ impl GifScene {
                     (self.time_till_next_frame / 4).try_into().unwrap(),
                 ))
                 .unwrap();
-            // println!("{:?} | {:?}", time, current_time);
-            if time > current_time {
+            if time < current_time {
                 self.current_frame += 1;
                 if self.current_frame > (self.frames.len() - 1) as u32 {
                     self.current_frame = 0;
