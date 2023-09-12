@@ -138,7 +138,7 @@ impl GifScene {
                 .time_loaded
                 .unwrap()
                 .checked_add(Duration::from_millis(
-                    (self.time_till_next_frame / 4).try_into().unwrap(),
+                    (self.time_till_next_frame).try_into().unwrap(),
                 ))
                 .unwrap();
             if time < current_time {
