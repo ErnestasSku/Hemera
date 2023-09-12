@@ -1,3 +1,5 @@
+use image::{gif::GifDecoder, AnimationDecoder};
+use std::time;
 use wgpu::Queue;
 use winit::window::Window;
 
@@ -6,7 +8,7 @@ use crate::renderer::{
     scenes::scene::ImageScene,
 };
 
-use super::scenes::scene::{SceneType, TestImageScene};
+use super::scenes::scene::{GifScene, SceneType, TestImageScene};
 
 pub struct Engine {
     pub surface: wgpu::Surface,
@@ -158,6 +160,64 @@ impl Engine {
     }
 
     pub fn load_scene(&mut self) {
+        // self.load_images()
+        self.load_gif();
+    }
+
+    fn load_gif(&mut self) {
+        let input =
+            std::fs::File::open("C:/Users/ernes/Desktop/---/Programming/Rust/Hemera/images/1.gif")
+                .unwrap();
+        // let mut options = gif::DecodeOptions::new();
+        // options.set_color_output(gif::ColorOutput::RGBA);
+
+        // let mut decoder = options.read_info(input).unwrap();
+        // while let Some(frame) = decoder.read_next_frame().unwrap() {
+
+        //     println!("Frame= {frame:?}");
+        // }
+        
+        let device = &self.device;
+        let mut decoder = GifDecoder::new(input).unwrap();
+        let frames = decoder.into_frames();
+        let frames = frames.collect_frames().expect("error decoding frames");
+
+        let a = frames[0].clone();
+        let b = a.buffer();
+
+        let gif_frames = frames
+            .iter()
+            .map(|f| {
+                let mut image = Image::test_gif(
+                    &self.device,
+                    &self.queue,
+                    1.0,
+                    &f,
+                );
+
+                image.create_bind_group(&device);
+                image.create_index_buffer(&device);
+                image.create_vertex_buffer(&device);
+
+                let (num, denum) = f.delay().numer_denom_ms();
+                let delay = time::Duration::from_millis((num / denum) as u64);
+                (image, delay)
+            })
+            .collect::<Vec<(Image, time::Duration)>>();
+
+        let gif_scene = GifScene {
+            first_load: true,
+            time_loaded: None,
+            time_till_next_frame: 0,
+            current_frame: 0,
+            frames: gif_frames,
+        };
+
+        let scene = Some(SceneType::Gif(gif_scene));
+        self.scene = scene;
+    }
+
+    fn load_images(&mut self) {
         let device = &self.device;
         let queue = &self.queue;
 
@@ -172,7 +232,6 @@ impl Engine {
             image.create_index_buffer(&device);
             image.create_vertex_buffer(&device);
         }
-
 
         let image_scene = TestImageScene { images };
 
@@ -200,8 +259,14 @@ impl Engine {
                 SceneType::Image(img) => {
                     img.render_scene(&mut encoder, &view, &self.render_pipeline, &self.device)
                 }
-                SceneType::TestImages(img) => img.render_scene(&mut encoder, &view, &self.render_pipeline, &self.device),
-                SceneType::Gif(_) => todo!(),
+
+                SceneType::TestImages(img) => {
+                    img.render_scene(&mut encoder, &view, &self.render_pipeline, &self.device)
+                }
+
+                SceneType::Gif(img) => {
+                    img.render_scene(&mut encoder, &view, &self.render_pipeline, &self.device)
+                }
             });
         }
 
