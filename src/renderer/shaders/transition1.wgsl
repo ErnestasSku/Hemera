@@ -59,15 +59,15 @@ fn main_fragment(input: VertexOutput) -> @location(0) vec4<f32> {
     }
     else {
         // German flag
-        // if (input.tex_coords.y < 0.33) {
-        //     return vec4<f32>(0.0, 0.0, 0.0, 1.0);
-        // }
-        // else if (input.tex_coords.y < 0.66) {
-        //     return vec4<f32>(1.0, 0.0, 0.0, 1.0);
-        // }
-        // else {
-        //     return vec4<f32>(1.0, 1.0, 0.0, 1.0);
-        // }
-        return vec4<f32>(0.0, 0.0, 0.0, 0.0);
+        if (input.tex_coords.y < 0.33) {
+            return vec4<f32>(0.0, 0.0, 0.0, 1.0);
+        }
+        else if (input.tex_coords.y < 0.66) {
+            return vec4<f32>(1.0, 0.0, 0.0, 1.0);
+        }
+        else {
+            return vec4<f32>(1.0, 1.0, 0.0, 1.0);
+        }
+        // return vec4<f32>(0.0, 0.0, 0.0, 0.0);
     }
 }

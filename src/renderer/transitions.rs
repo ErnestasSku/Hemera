@@ -82,7 +82,7 @@ impl Transition {
         let shader = device.create_shader_module(wgpu::ShaderModuleDescriptor {
             label: Some("Transition shader"),
             source: wgpu::ShaderSource::Wgsl(
-                include_str!("../renderer/shaders/transition1.wgsl").into(),
+                include_str!("../renderer/shaders/transition2.wgsl").into(),
             ),
         });
 
