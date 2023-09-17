@@ -5,7 +5,11 @@ use winit::window::Window;
 use crate::renderer::primitives::{image::Image, vertex::Vertex};
 
 use super::{
-    scenes::scene::{GifScene, SceneType, TestImageScene},
+    scenes::{
+        gif_scene::GifScene,
+        scene::{Scene, SceneType},
+        test_image_scene::TestImageScene,
+    },
     transitions::Transition,
 };
 
@@ -214,7 +218,6 @@ impl Engine {
         self.scene = scene;
     }
 
-    
     #[allow(dead_code)] // testing purposes
     fn load_images(&mut self) {
         let device = &self.device;
@@ -286,34 +289,12 @@ impl Engine {
         // println!("Prepare render");
         {
             if let Some(scene) = self.scene.as_mut() {
-                match scene {
-                    SceneType::Image(img) => img.render_scene(
-                        &mut encoder,
-                        &render_texture.create_view(&wgpu::TextureViewDescriptor::default()),
-                        &self.render_pipeline,
-                        &self.device,
-                    ),
-    
-                    SceneType::TestImages(img) => img.render_scene(
-                        &mut encoder,
-                        &render_texture.create_view(&wgpu::TextureViewDescriptor::default()),
-                        &self.render_pipeline,
-                        &self.device,
-                    ),
-    
-                    SceneType::Gif(img) => img.render_scene(
-                        &mut encoder,
-                        &render_texture.create_view(&wgpu::TextureViewDescriptor::default()),
-                        &self.render_pipeline,
-                        &self.device,
-                    ),
-                }
+                scene.render_scene(&mut encoder, &view, &self.render_pipeline)
             }
         }
 
         ////
 
-        // .create_view(&wgpu::TextureViewDescriptor::default());
 
         //Create texture bind group
         if let Some(transition) = &mut self.transition {
