@@ -178,6 +178,7 @@ impl Engine {
         self.transition = Some(transition);
     }
 
+    #[allow(dead_code)]
     fn load_gif(&mut self) {
         let input =
             std::fs::File::open("C:/Users/ernes/Desktop/---/Programming/Rust/Hemera/images/2.gif")
@@ -261,8 +262,8 @@ impl Engine {
         let render_texture = &self.device.create_texture(&wgpu::TextureDescriptor {
             // Set the dimensions and format of the texture
             size: wgpu::Extent3d {
-                width: 500,  // Replace with the actual width of your surface
-                height: 500, // Replace with the actual height of your surface
+                width: self.size.width,  // Replace with the actual width of your surface
+                height: self.size.height, // Replace with the actual height of your surface
                 depth_or_array_layers: 1,
             },
             mip_level_count: 1,
@@ -286,14 +287,12 @@ impl Engine {
                 label: Some("Render Encoder"),
             });
 
-        // println!("Prepare render");
         {
             if let Some(scene) = self.scene.as_mut() {
                 scene.render_scene(&mut encoder, &view, &self.render_pipeline)
             }
         }
 
-        ////
 
 
         //Create texture bind group
