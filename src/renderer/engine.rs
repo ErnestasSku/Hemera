@@ -1,16 +1,12 @@
 use image::{gif::GifDecoder, AnimationDecoder};
 use std::time;
-use wgpu::Queue;
 use winit::window::Window;
 
-use crate::renderer::{
-    primitives::{image::Image, vertex::Vertex},
-    scenes::scene::ImageScene,
-};
+use crate::renderer::primitives::{image::Image, vertex::Vertex};
 
 use super::{
     scenes::scene::{GifScene, SceneType, TestImageScene},
-    transitions::Transition, texture,
+    transitions::Transition,
 };
 
 pub struct Engine {
@@ -18,13 +14,14 @@ pub struct Engine {
     pub device: wgpu::Device,
     pub queue: wgpu::Queue,
     pub config: wgpu::SurfaceConfiguration,
-    pub size: winit::dpi::PhysicalSize<u32>,
+
     pub render_pipeline: wgpu::RenderPipeline,
     pub scene: Option<SceneType>,
     pub transition: Option<Transition>,
 
     //Winit
     pub window: Window,
+    pub size: winit::dpi::PhysicalSize<u32>,
 }
 
 impl Engine {
@@ -183,21 +180,21 @@ impl Engine {
                 .unwrap();
 
         let device = &self.device;
-        let mut decoder = GifDecoder::new(input).unwrap();
+        let decoder = GifDecoder::new(input).unwrap();
         let frames = decoder.into_frames();
         let frames = frames.collect_frames().expect("error decoding frames");
 
         let a = frames[0].clone();
-        let b = a.buffer();
+        let _b = a.buffer();
 
         let gif_frames = frames
             .iter()
             .map(|f| {
-                let mut image = Image::test_gif(&self.device, &self.queue, 1.0, &f);
+                let mut image = Image::test_gif(&self.device, &self.queue, 1.0, f);
 
-                image.create_bind_group(&device);
-                image.create_index_buffer(&device);
-                image.create_vertex_buffer(&device);
+                image.create_bind_group(device);
+                image.create_index_buffer(device);
+                image.create_vertex_buffer(device);
 
                 let (num, denum) = f.delay().numer_denom_ms();
                 let delay = time::Duration::from_millis((num / denum) as u64);
@@ -217,20 +214,22 @@ impl Engine {
         self.scene = scene;
     }
 
+    
+    #[allow(dead_code)] // testing purposes
     fn load_images(&mut self) {
         let device = &self.device;
         let queue = &self.queue;
 
-        let image1 = Image::test(&device, &queue, 0.1, 0.7, 0.7);
-        let image2 = Image::test(&device, &queue, 0.2, 0.0, 0.0);
-        let image3 = Image::test(&device, &queue, 0.3, -0.7, 0.2);
+        let image1 = Image::test(device, queue, 0.1, 0.7, 0.7);
+        let image2 = Image::test(device, queue, 0.2, 0.0, 0.0);
+        let image3 = Image::test(device, queue, 0.3, -0.7, 0.2);
 
         let mut images = vec![image1, image2, image3];
 
         for image in images.iter_mut() {
-            image.create_bind_group(&device);
-            image.create_index_buffer(&device);
-            image.create_vertex_buffer(&device);
+            image.create_bind_group(device);
+            image.create_index_buffer(device);
+            image.create_vertex_buffer(device);
         }
 
         let image_scene = TestImageScene { images };
@@ -259,22 +258,21 @@ impl Engine {
         let render_texture = &self.device.create_texture(&wgpu::TextureDescriptor {
             // Set the dimensions and format of the texture
             size: wgpu::Extent3d {
-                width: 500,   // Replace with the actual width of your surface
+                width: 500,  // Replace with the actual width of your surface
                 height: 500, // Replace with the actual height of your surface
                 depth_or_array_layers: 1,
             },
             mip_level_count: 1,
             sample_count: 1,
             dimension: wgpu::TextureDimension::D2,
-            format: self.config.format, 
+            format: self.config.format,
             usage: wgpu::TextureUsages::RENDER_ATTACHMENT | wgpu::TextureUsages::TEXTURE_BINDING,
             label: Some("Render Texture"),
             view_formats: &[],
         });
 
-        
         let output = self.surface.get_current_texture()?;
-        
+
         let view = output
             .texture
             .create_view(&wgpu::TextureViewDescriptor::default());
@@ -287,30 +285,40 @@ impl Engine {
 
         // println!("Prepare render");
         {
-            self.scene.as_mut().map(|v| match v {
-                SceneType::Image(img) => {
-                    img.render_scene(&mut encoder, &render_texture.create_view(&wgpu::TextureViewDescriptor::default()), &self.render_pipeline, &self.device)
+            if let Some(scene) = self.scene.as_mut() {
+                match scene {
+                    SceneType::Image(img) => img.render_scene(
+                        &mut encoder,
+                        &render_texture.create_view(&wgpu::TextureViewDescriptor::default()),
+                        &self.render_pipeline,
+                        &self.device,
+                    ),
+    
+                    SceneType::TestImages(img) => img.render_scene(
+                        &mut encoder,
+                        &render_texture.create_view(&wgpu::TextureViewDescriptor::default()),
+                        &self.render_pipeline,
+                        &self.device,
+                    ),
+    
+                    SceneType::Gif(img) => img.render_scene(
+                        &mut encoder,
+                        &render_texture.create_view(&wgpu::TextureViewDescriptor::default()),
+                        &self.render_pipeline,
+                        &self.device,
+                    ),
                 }
-
-                SceneType::TestImages(img) => {
-                    img.render_scene(&mut encoder, &render_texture.create_view(&wgpu::TextureViewDescriptor::default()), &self.render_pipeline, &self.device)
-                }
-
-                SceneType::Gif(img) => {
-                    img.render_scene(&mut encoder, &render_texture.create_view(&wgpu::TextureViewDescriptor::default()), &self.render_pipeline, &self.device)
-                }
-            });
+            }
         }
 
         ////
 
-
-            // .create_view(&wgpu::TextureViewDescriptor::default());
+        // .create_view(&wgpu::TextureViewDescriptor::default());
 
         //Create texture bind group
         if let Some(transition) = &mut self.transition {
             let a = &render_texture.create_view(&wgpu::TextureViewDescriptor::default());
-            transition.create_bind_group(&self.device, &a);
+            transition.create_bind_group(&self.device, a);
 
             let mut render_pass = encoder.begin_render_pass(&wgpu::RenderPassDescriptor {
                 label: Some("Transition pass"),
@@ -335,12 +343,13 @@ impl Engine {
             render_pass.set_bind_group(0, transition.bind_group.as_ref().unwrap(), &[]);
             render_pass.set_bind_group(1, &transition.transition_bind_group, &[]);
             render_pass.set_vertex_buffer(0, transition.vertex_buffer.as_ref().unwrap().slice(..));
-            render_pass.set_index_buffer(transition.index_buffer.as_ref().unwrap().slice(..), wgpu::IndexFormat::Uint16);
+            render_pass.set_index_buffer(
+                transition.index_buffer.as_ref().unwrap().slice(..),
+                wgpu::IndexFormat::Uint16,
+            );
 
             render_pass.draw_indexed(0..transition.plane.get_indices().len() as u32, 0, 0..1)
-
         }
-
 
         self.queue.submit(std::iter::once(encoder.finish()));
         output.present();

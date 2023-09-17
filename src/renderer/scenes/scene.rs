@@ -1,6 +1,5 @@
 use std::time::{Duration, Instant};
 
-use env_logger::fmt::Timestamp;
 use wgpu::{CommandEncoder, Device, RenderPipeline, TextureView};
 
 use crate::renderer::primitives::image::Image;
@@ -9,6 +8,7 @@ trait Scene {
     fn render_scene();
 }
 
+#[allow(dead_code)]
 pub enum SceneType {
     Image(ImageScene),
     TestImages(TestImageScene),
@@ -37,13 +37,13 @@ impl ImageScene {
         encoder: &mut CommandEncoder,
         view: &TextureView,
         pipeline: &RenderPipeline,
-        device: &Device,
+        _device: &Device,
     ) {
         // println!("Render");
         let mut render_pass = encoder.begin_render_pass(&wgpu::RenderPassDescriptor {
             label: Some("Render Pass"),
             color_attachments: &[Some(wgpu::RenderPassColorAttachment {
-                view: &view,
+                view,
                 resolve_target: None,
                 ops: wgpu::Operations {
                     load: wgpu::LoadOp::Clear(wgpu::Color {
@@ -61,7 +61,7 @@ impl ImageScene {
         render_pass.set_pipeline(pipeline);
 
         let bind_group = self.image.bind_group.as_ref().unwrap();
-        render_pass.set_bind_group(0, &bind_group, &[]);
+        render_pass.set_bind_group(0, bind_group, &[]);
         render_pass.set_vertex_buffer(0, self.image.vertex_buffer.as_ref().unwrap().slice(..));
         render_pass.set_index_buffer(
             self.image.index_buffer.as_ref().unwrap().slice(..),
@@ -78,12 +78,12 @@ impl TestImageScene {
         encoder: &mut CommandEncoder,
         view: &TextureView,
         pipeline: &RenderPipeline,
-        device: &Device,
+        _device: &Device,
     ) {
         let mut render_pass = encoder.begin_render_pass(&wgpu::RenderPassDescriptor {
             label: Some("Render Pass"),
             color_attachments: &[Some(wgpu::RenderPassColorAttachment {
-                view: &view,
+                view,
                 resolve_target: None,
                 ops: wgpu::Operations {
                     load: wgpu::LoadOp::Clear(wgpu::Color {
@@ -102,7 +102,7 @@ impl TestImageScene {
 
         for i in self.images.iter() {
             let bind_group = i.bind_group.as_ref().unwrap();
-            render_pass.set_bind_group(0, &bind_group, &[]);
+            render_pass.set_bind_group(0, bind_group, &[]);
             render_pass.set_vertex_buffer(0, i.vertex_buffer.as_ref().unwrap().slice(..));
             render_pass.set_index_buffer(
                 i.index_buffer.as_ref().unwrap().slice(..),
@@ -120,7 +120,7 @@ impl GifScene {
         encoder: &mut CommandEncoder,
         view: &TextureView,
         pipeline: &RenderPipeline,
-        device: &Device,
+        _device: &Device,
     ) {
         let current_time = std::time::Instant::now();
 
@@ -162,7 +162,7 @@ impl GifScene {
         let mut render_pass = encoder.begin_render_pass(&wgpu::RenderPassDescriptor {
             label: Some("Render Pass"),
             color_attachments: &[Some(wgpu::RenderPassColorAttachment {
-                view: &view,
+                view,
                 resolve_target: None,
                 ops: wgpu::Operations {
                     load: wgpu::LoadOp::Clear(wgpu::Color {
@@ -181,7 +181,7 @@ impl GifScene {
 
         let image = &self.frames.get(self.current_frame as usize).unwrap().0;
 
-        render_pass.set_bind_group(0, &image.bind_group.as_ref().unwrap(), &[]);
+        render_pass.set_bind_group(0, image.bind_group.as_ref().unwrap(), &[]);
         render_pass.set_vertex_buffer(0, image.vertex_buffer.as_ref().unwrap().slice(..));
         render_pass.set_index_buffer(image.index_buffer.as_ref().unwrap().slice(..), wgpu::IndexFormat::Uint16);
 

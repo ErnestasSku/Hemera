@@ -55,6 +55,7 @@ impl Plane {
         Plane { vertices }
     }
 
+    #[allow(dead_code)]
     pub fn move_x_offset(&mut self, x_offset: f32) -> &mut Self {
         self.vertices = self
             .vertices
@@ -64,6 +65,7 @@ impl Plane {
         self
     }
 
+    #[allow(dead_code)]
     pub fn move_y_offset(&mut self, y_offset: f32) -> &mut Self {
         self.vertices = self
             .vertices
@@ -73,6 +75,8 @@ impl Plane {
         self
     }
 
+
+    #[allow(dead_code)]
     pub fn get_vertices(&self) -> Vec<Vertex> {
         self.vertices.clone()
     }

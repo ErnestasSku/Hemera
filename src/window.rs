@@ -44,7 +44,7 @@ pub async fn run() {
         match event {
             Event::WindowEvent {
                 ref event,
-                window_id,
+                window_id: _,
             } => {
                 // UPDATED!
                 match event {
@@ -58,16 +58,16 @@ pub async fn run() {
                             },
                         ..
                     } => *control_flow = ControlFlow::Exit,
-                    WindowEvent::Resized(physical_size) => {
+                    WindowEvent::Resized(_physical_size) => {
                         // state.resize(*physical_size);
                     }
-                    WindowEvent::ScaleFactorChanged { new_inner_size, .. } => {
+                    WindowEvent::ScaleFactorChanged { .. } => {
                         // state.resize(**new_inner_size);
                     }
                     _ => {}
                 }
             }
-            Event::RedrawRequested(window_id) => {
+            Event::RedrawRequested(_window_id) => {
                 state.update();
                 match state.render() {
                     Ok(_) => {}

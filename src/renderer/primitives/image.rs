@@ -1,4 +1,4 @@
-use wgpu::{util::DeviceExt, Device, BindGroupLayout};
+use wgpu::{util::DeviceExt, Device};
 
 use crate::renderer::texture::Texture;
 
@@ -56,7 +56,7 @@ impl Image {
 
     pub fn create_index_buffer(&mut self, device: &Device) {
         let index_buffer = device.create_buffer_init(&wgpu::util::BufferInitDescriptor {
-            label: Some("Image 9ndex buffer"),
+            label: Some("Image index buffer"),
             contents: bytemuck::cast_slice(&self.plane.get_indices()),
             usage: wgpu::BufferUsages::INDEX,
         });
