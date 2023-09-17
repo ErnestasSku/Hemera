@@ -7,14 +7,15 @@ use winit::{
 use crate::renderer::engine::Engine;
 
 pub async fn run() {
+    let mut transition_count = 0;
     env_logger::init();
     let event_loop = EventLoop::new();
     let window = WindowBuilder::new().build(&event_loop).unwrap();
 
     // let mut state = State::new(window).await;
     let mut state = Engine::new(window).await;
-    state.load_scene();
-    state.load_transition();
+    state.load_scene(false);
+    // state.load_transition();
 
     // event_loop.run(move |event, _, control_flow| {
     //     match event {
@@ -64,6 +65,22 @@ pub async fn run() {
                     WindowEvent::ScaleFactorChanged { .. } => {
                         // state.resize(**new_inner_size);
                     }
+                    WindowEvent::KeyboardInput {
+                        input:
+                            KeyboardInput {
+                                state: ElementState::Pressed,
+                                virtual_keycode: Some(VirtualKeyCode::Space),
+                                ..
+                            },
+                        ..
+                    } => {
+                        transition_count += 1;
+                        println!("{transition_count}");
+
+                        state.load_transition();
+                        state.load_scene(transition_count % 2 == 1);
+
+                    }
                     _ => {}
                 }
             }
@@ -72,7 +89,7 @@ pub async fn run() {
                 match state.render() {
                     Ok(_) => {}
                     // Reconfigure the surface if lost
-                    Err(wgpu::SurfaceError::Lost) => {},
+                    Err(wgpu::SurfaceError::Lost) => {}
                     // The system is out of memory, we should probably quit
                     Err(wgpu::SurfaceError::OutOfMemory) => *control_flow = ControlFlow::Exit,
                     // All other errors (Outdated, Timeout) should be resolved by the next frame

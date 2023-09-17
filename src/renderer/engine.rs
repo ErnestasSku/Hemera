@@ -165,13 +165,19 @@ impl Engine {
         }
     }
 
-    pub fn load_scene(&mut self) {
-        // self.load_images()
-        self.load_gif();
+    pub fn load_scene(&mut self, a: bool) {
+        if a {
+            self.load_images();
+
+        } else {
+            self.load_gif();
+        }
     }
 
     pub fn load_transition(&mut self) {
-        let mut transition = Transition::test(&self.device, &self.config);
+        let scene = self.scene.take().unwrap();
+
+        let mut transition = Transition::test(&self.device, &self.config, scene, self.config.format);
         transition.create_index_buffer(&self.device);
         transition.create_vertex_buffer(&self.device);
 
@@ -259,21 +265,7 @@ impl Engine {
     }
 
     pub fn render(&mut self) -> Result<(), wgpu::SurfaceError> {
-        let render_texture = &self.device.create_texture(&wgpu::TextureDescriptor {
-            // Set the dimensions and format of the texture
-            size: wgpu::Extent3d {
-                width: self.size.width,   // Replace with the actual width of your surface
-                height: self.size.height, // Replace with the actual height of your surface
-                depth_or_array_layers: 1,
-            },
-            mip_level_count: 1,
-            sample_count: 1,
-            dimension: wgpu::TextureDimension::D2,
-            format: self.config.format,
-            usage: wgpu::TextureUsages::RENDER_ATTACHMENT | wgpu::TextureUsages::TEXTURE_BINDING,
-            label: Some("Render Texture"),
-            view_formats: &[],
-        });
+
 
         let output = self.surface.get_current_texture()?;
 
@@ -291,47 +283,55 @@ impl Engine {
             if let Some(scene) = self.scene.as_mut() {
                 scene.render_scene(
                     &mut encoder,
-                    &render_texture.create_view(&wgpu::TextureViewDescriptor::default()),
+                    &view,
+                    // &render_texture.create_view(&wgpu::TextureViewDescriptor::default()),
                     &self.render_pipeline,
                 )
             }
         }
 
-        //Create texture bind group
-        if let Some(transition) = &mut self.transition {
-            let a = &render_texture.create_view(&wgpu::TextureViewDescriptor::default());
-            transition.create_bind_group(&self.device, a);
 
-            let mut render_pass = encoder.begin_render_pass(&wgpu::RenderPassDescriptor {
-                label: Some("Transition pass"),
-                color_attachments: &[Some(wgpu::RenderPassColorAttachment {
-                    view: &view, 
-                    resolve_target: None,
-                    ops: wgpu::Operations {
-                        load: wgpu::LoadOp::Clear(wgpu::Color {
-                            r: 0.5,
-                            g: 0.1,
-                            b: 0.2,
-                            a: 1.0,
-                        }),
-                        store: true,
-                    },
-                })],
-                depth_stencil_attachment: None,
-            });
-
-            render_pass.set_pipeline(&transition.transition_pipeline);
-
-            render_pass.set_bind_group(0, transition.bind_group.as_ref().unwrap(), &[]);
-            render_pass.set_bind_group(1, &transition.transition_bind_group, &[]);
-            render_pass.set_vertex_buffer(0, transition.vertex_buffer.as_ref().unwrap().slice(..));
-            render_pass.set_index_buffer(
-                transition.index_buffer.as_ref().unwrap().slice(..),
-                wgpu::IndexFormat::Uint16,
-            );
-
-            render_pass.draw_indexed(0..transition.plane.get_indices().len() as u32, 0, 0..1)
+        {
+            if let Some(transition) = self.transition.as_mut() {
+                transition.transition(&mut encoder, &view, &self.device, &self.render_pipeline);
+            }
         }
+
+        //Create texture bind group
+        // if let Some(transition) = &mut self.transition {
+        //     let a = &render_texture.create_view(&wgpu::TextureViewDescriptor::default());
+        //     transition.create_bind_group(&self.device, a);
+
+        //     let mut render_pass = encoder.begin_render_pass(&wgpu::RenderPassDescriptor {
+        //         label: Some("Transition pass"),
+        //         color_attachments: &[Some(wgpu::RenderPassColorAttachment {
+        //             view: &view, 
+        //             resolve_target: None,
+        //             ops: wgpu::Operations {
+        //                 load: wgpu::LoadOp::Clear(wgpu::Color {
+        //                     r: 0.5,
+        //                     g: 0.1,
+        //                     b: 0.2,
+        //                     a: 1.0,
+        //                 }),
+        //                 store: true,
+        //             },
+        //         })],
+        //         depth_stencil_attachment: None,
+        //     });
+
+        //     render_pass.set_pipeline(&transition.transition_pipeline);
+
+        //     render_pass.set_bind_group(0, transition.bind_group.as_ref().unwrap(), &[]);
+        //     render_pass.set_bind_group(1, &transition.transition_bind_group, &[]);
+        //     render_pass.set_vertex_buffer(0, transition.vertex_buffer.as_ref().unwrap().slice(..));
+        //     render_pass.set_index_buffer(
+        //         transition.index_buffer.as_ref().unwrap().slice(..),
+        //         wgpu::IndexFormat::Uint16,
+    //     );
+
+        //     render_pass.draw_indexed(0..transition.plane.get_indices().len() as u32, 0, 0..1)
+        // }
 
         self.queue.submit(std::iter::once(encoder.finish()));
         output.present();

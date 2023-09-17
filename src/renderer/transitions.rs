@@ -1,6 +1,13 @@
-use wgpu::{util::DeviceExt, Device, SurfaceConfiguration};
+use wgpu::{
+    util::DeviceExt, CommandEncoder, Device, SurfaceConfiguration, TextureDescriptor,
+    TextureFormat, TextureView, RenderPipeline,
+};
 
-use super::primitives::{plane::Plane, vertex::Vertex};
+use super::{
+    primitives::{plane::Plane, vertex::Vertex},
+    scenes::scene::{Scene, SceneType},
+    texture,
+};
 
 pub struct Transition {
     pub transition_uniform: TransitionUniform,
@@ -13,6 +20,9 @@ pub struct Transition {
     pub index_buffer: Option<wgpu::Buffer>,
     pub bind_group: Option<wgpu::BindGroup>,
     pub time_started: std::time::Instant,
+
+    pub scene: SceneType,
+    pub scene_texture: wgpu::Texture,
 }
 
 #[repr(C)]
@@ -29,7 +39,12 @@ impl TransitionUniform {
 }
 
 impl Transition {
-    pub fn test(device: &Device, config: &SurfaceConfiguration) -> Self {
+    pub fn test(
+        device: &Device,
+        config: &SurfaceConfiguration,
+        scene: SceneType,
+        format: TextureFormat,
+    ) -> Self {
         let transition_uniform = TransitionUniform {
             dissolve_speed: 0.5,
             time_offset: 0.0,
@@ -109,8 +124,6 @@ impl Transition {
                 label: Some("texture_bind_group_layout"),
             });
 
-
-
         let render_pipeline_layout =
             device.create_pipeline_layout(&wgpu::PipelineLayoutDescriptor {
                 label: Some("Transition render layout"),
@@ -153,6 +166,22 @@ impl Transition {
             multiview: None,
         });
 
+        let scene_texture = device.create_texture(&wgpu::TextureDescriptor {
+            // Set the dimensions and format of the texture
+            size: wgpu::Extent3d {
+                width: 500,  // Replace with the actual width of your surface
+                height: 500, // Replace with the actual height of your surface
+                depth_or_array_layers: 1,
+            },
+            mip_level_count: 1,
+            sample_count: 1,
+            dimension: wgpu::TextureDimension::D2,
+            format,
+            usage: wgpu::TextureUsages::RENDER_ATTACHMENT | wgpu::TextureUsages::TEXTURE_BINDING,
+            label: Some("Render Texture"),
+            view_formats: &[],
+        });
+
         Self {
             transition_uniform,
             transition_buffer,
@@ -164,6 +193,8 @@ impl Transition {
             vertex_buffer: None,
             sampler,
             transition_pipeline,
+            scene,
+            scene_texture,
         }
     }
 
@@ -227,5 +258,63 @@ impl Transition {
         });
 
         self.bind_group = Some(diffuse_bind_group);
+    }
+
+    pub fn transition(
+        &mut self,
+        encoder: &mut CommandEncoder,
+        view: &TextureView,
+        device: &Device,
+        render_pipeline: &RenderPipeline
+    ) {
+        let mut encoder2 = device.create_command_encoder(&wgpu::CommandEncoderDescriptor {
+            label: Some("Render Encoder"),
+        });
+        
+        // println!("enc2");
+        let texture_view = self
+            .scene_texture
+            .create_view(&wgpu::TextureViewDescriptor::default());
+        self.scene
+            .render_scene(encoder, &texture_view, render_pipeline);
+
+        // println!("render scene");
+        self.create_bind_group(device, &texture_view);
+
+        let mut render_pass = encoder.begin_render_pass(&wgpu::RenderPassDescriptor {
+            label: Some("Transition pass"),
+            color_attachments: &[Some(wgpu::RenderPassColorAttachment {
+                view: &view,
+                resolve_target: None,
+                ops: wgpu:: Operations {
+                    load: wgpu::LoadOp::Load,
+                    store: true,
+                }
+                // ops: wgpu::Operations {
+                //     load: wgpu::LoadOp::Clear(wgpu::Color {
+                //         r: 0.0,
+                //         g: 0.0,
+                //         b: 0.0,
+                //         a: 0.0,
+                //     }),
+                //     store: true,
+                // },
+            })],
+            depth_stencil_attachment: None,
+        });
+
+        render_pass.set_pipeline(&self.transition_pipeline);
+
+
+        render_pass.set_bind_group(0, self.bind_group.as_ref().unwrap(), &[]);
+        render_pass.set_bind_group(1, &self.transition_bind_group, &[]);
+        render_pass.set_vertex_buffer(0, self.vertex_buffer.as_ref().unwrap().slice(..));
+        render_pass.set_index_buffer(
+            self.index_buffer.as_ref().unwrap().slice(..),
+            wgpu::IndexFormat::Uint16,
+        );
+
+        render_pass.draw_indexed(0..self.plane.get_indices().len() as u32, 0, 0..1)
+        // render_pass.draw
     }
 }
