@@ -14,6 +14,7 @@ pub async fn run() {
     // let mut state = State::new(window).await;
     let mut state = Engine::new(window).await;
     state.load_scene();
+    state.load_transition();
 
     // event_loop.run(move |event, _, control_flow| {
     //     match event {
