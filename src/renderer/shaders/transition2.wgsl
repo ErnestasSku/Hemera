@@ -34,19 +34,31 @@ fn main_fragment(input: VertexOutput) -> @location(0) vec4<f32> {
 
     // var pi: f32 = 3.1415;
 
-    var r: f32 = 0.2;
-    var timed_radius = r * constants.time_offset; 
+    // var r: f32 = 0.2;
+    // var timed_radius = r * constants.time_offset; 
 
-    var center: vec2<f32> = vec2<f32>(1.0, 1.0);
-    var point: vec2<f32> = vec2<f32>(input.tex_coords.x, input.tex_coords.y);
-    var texture_color : vec4<f32> = textureSample(t_diffuse, s_diffuse, input.tex_coords);
+    // var center: vec2<f32> = vec2<f32>(1.0, 1.0);
+    // var point: vec2<f32> = vec2<f32>(input.tex_coords.x, input.tex_coords.y);
+    // var texture_color : vec4<f32> = textureSample(t_diffuse, s_diffuse, input.tex_coords);
 
 
-    if (in_circle(center, point, timed_radius)) {
-        return vec4<f32>(0.0, 0.0, 0.0, 0.0);
-    } else {
-        return texture_color;
-    }
+    // if (in_circle(center, point, timed_radius)) {
+    //     return vec4<f32>(0.0, 0.0, 0.0, 0.0);
+    // } else {
+    //     return texture_color;
+    // }
+
+
+    // let scrollOffset = scrollOffsetBuffer.load(0);
+
+    // Calculate the new texture coordinates with scrolling
+    var uv = input.tex_coords;
+    uv.x += (constants.time_offset / 5.0); // Scroll in the x-axis (horizontal)
+
+    // Sample the texture with the modified coordinates
+    var color = textureSample(t_diffuse, s_diffuse, uv);
+
+    return color;
 
 }
 

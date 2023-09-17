@@ -7,6 +7,7 @@ use super::plane::Plane;
 pub struct Image {
     pub plane: Plane,
     pub texture: Texture,
+    pub preprocessed_texture: Option<Texture>,
     pub bind_group: Option<wgpu::BindGroup>,
     pub vertex_buffer: Option<wgpu::Buffer>,
     pub index_buffer: Option<wgpu::Buffer>,
@@ -26,6 +27,7 @@ impl Image {
             bind_group: None,
             vertex_buffer: None,
             index_buffer: None,
+            preprocessed_texture: None,
         }
     }
 
@@ -42,6 +44,7 @@ impl Image {
             bind_group: None,
             vertex_buffer: None,
             index_buffer: None,
+            preprocessed_texture: None,
         }
     }
 
