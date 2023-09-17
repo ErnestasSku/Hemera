@@ -11,7 +11,7 @@ pub struct ImageScene {
 }
 
 impl Scene for ImageScene {
-    fn render_scene(
+     fn render_scene(
         &mut self,
         encoder: &mut CommandEncoder,
         view: &TextureView,

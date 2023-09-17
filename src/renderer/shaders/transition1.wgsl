@@ -53,21 +53,12 @@ fn main_fragment(input: VertexOutput) -> @location(0) vec4<f32> {
     var pixel_within_texture : vec2<f32> = floor(input.tex_coords * texture_resolution);
     var texture_color : vec4<f32> = textureSample(t_diffuse, s_diffuse, input.tex_coords);
 
-    if (sin((constants.time_offset * constants.dissolve_speed) + 0.0) < random_coord(pixel_within_texture)) {
+    if (constants.time_offset * constants.dissolve_speed + 0.0) < random_coord(pixel_within_texture) {
         // Set to the original texture color
         return texture_color;
     }
     else {
-        // German flag
-        if (input.tex_coords.y < 0.33) {
-            return vec4<f32>(0.0, 0.0, 0.0, 1.0);
-        }
-        else if (input.tex_coords.y < 0.66) {
-            return vec4<f32>(1.0, 0.0, 0.0, 1.0);
-        }
-        else {
-            return vec4<f32>(1.0, 1.0, 0.0, 1.0);
-        }
-        // return vec4<f32>(0.0, 0.0, 0.0, 0.0);
+
+        return vec4<f32>(0.0, 0.0, 0.0, 0.0);
     }
 }
