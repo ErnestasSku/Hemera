@@ -44,12 +44,7 @@ fn main_fragment(input: VertexOutput) -> @location(0) vec4<f32> {
 
     if (in_circle(center, point, timed_radius)) {
         return vec4<f32>(0.0, 0.0, 0.0, 0.0);
-
-        // return texture_color;
-
     } else {
-        // return vec4<f32>(1.0, 0.0, 0.0, 0.0);
-
         return texture_color;
     }
 
