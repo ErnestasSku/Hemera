@@ -167,7 +167,8 @@ impl Engine {
 
     pub fn load_scene(&mut self, a: bool) {
         if a {
-            self.load_images();
+            // self.load_images();
+            self.load_gif2();
         } else {
             self.load_gif();
         }
@@ -188,6 +189,46 @@ impl Engine {
     fn load_gif(&mut self) {
         let input =
             std::fs::File::open("C:/Users/ernes/Desktop/---/Programming/Rust/Hemera/images/2.gif")
+                .unwrap();
+
+        let device = &self.device;
+        let decoder = GifDecoder::new(input).unwrap();
+        let frames = decoder.into_frames();
+        let frames = frames.collect_frames().expect("error decoding frames");
+
+        let a = frames[0].clone();
+        let _b = a.buffer();
+
+        let gif_frames = frames
+            .iter()
+            .map(|f| {
+                let mut image = Image::test_gif(&self.device, &self.queue, 1.0, f);
+
+                image.create_bind_group(device);
+                image.create_index_buffer(device);
+                image.create_vertex_buffer(device);
+
+                let (num, denum) = f.delay().numer_denom_ms();
+                let delay = time::Duration::from_millis((num / denum) as u64);
+                (image, delay)
+            })
+            .collect::<Vec<(Image, time::Duration)>>();
+
+        let gif_scene = GifScene {
+            first_load: true,
+            time_loaded: None,
+            time_till_next_frame: 0,
+            current_frame: 0,
+            frames: gif_frames,
+        };
+
+        let scene = Some(SceneType::Gif(gif_scene));
+        self.scene = scene;
+    }
+
+    fn load_gif2(&mut self) {
+        let input =
+            std::fs::File::open("C:/Users/ernes/Desktop/---/Programming/Rust/Hemera/images/3.gif")
                 .unwrap();
 
         let device = &self.device;
