@@ -1,4 +1,4 @@
-use wgpu::{CommandEncoder, TextureView, RenderPipeline};
+use wgpu::{CommandEncoder, RenderPipeline, TextureView};
 
 use crate::renderer::primitives::image::Image;
 

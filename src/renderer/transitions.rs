@@ -1,6 +1,6 @@
 use wgpu::{
-    util::DeviceExt, CommandEncoder, Device, SurfaceConfiguration, TextureDescriptor,
-    TextureFormat, TextureView, RenderPipeline,
+    util::DeviceExt, CommandEncoder, Device, RenderPipeline, SurfaceConfiguration,
+    TextureDescriptor, TextureFormat, TextureView,
 };
 
 use super::{
@@ -265,12 +265,12 @@ impl Transition {
         encoder: &mut CommandEncoder,
         view: &TextureView,
         device: &Device,
-        render_pipeline: &RenderPipeline
+        render_pipeline: &RenderPipeline,
     ) {
         let mut encoder2 = device.create_command_encoder(&wgpu::CommandEncoderDescriptor {
             label: Some("Render Encoder"),
         });
-        
+
         // println!("enc2");
         let texture_view = self
             .scene_texture
@@ -286,25 +286,23 @@ impl Transition {
             color_attachments: &[Some(wgpu::RenderPassColorAttachment {
                 view: &view,
                 resolve_target: None,
-                ops: wgpu:: Operations {
+                ops: wgpu::Operations {
                     load: wgpu::LoadOp::Load,
                     store: true,
-                }
-                // ops: wgpu::Operations {
-                //     load: wgpu::LoadOp::Clear(wgpu::Color {
-                //         r: 0.0,
-                //         g: 0.0,
-                //         b: 0.0,
-                //         a: 0.0,
-                //     }),
-                //     store: true,
-                // },
+                }, // ops: wgpu::Operations {
+                   //     load: wgpu::LoadOp::Clear(wgpu::Color {
+                   //         r: 0.0,
+                   //         g: 0.0,
+                   //         b: 0.0,
+                   //         a: 0.0,
+                   //     }),
+                   //     store: true,
+                   // },
             })],
             depth_stencil_attachment: None,
         });
 
         render_pass.set_pipeline(&self.transition_pipeline);
-
 
         render_pass.set_bind_group(0, self.bind_group.as_ref().unwrap(), &[]);
         render_pass.set_bind_group(1, &self.transition_bind_group, &[]);

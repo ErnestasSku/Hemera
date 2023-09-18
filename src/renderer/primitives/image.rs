@@ -29,23 +29,22 @@ impl Image {
         }
     }
 
-    pub fn test_gif(device: &Device, queue: &wgpu::Queue, scale: f32, bytes: &image::Frame) -> Self {
+    pub fn test_gif(
+        device: &Device,
+        queue: &wgpu::Queue,
+        scale: f32,
+        bytes: &image::Frame,
+    ) -> Self {
         Image {
             plane: Plane::new(scale),
-            texture: Texture::from_frame(
-                device,
-                queue,
-                bytes,
-                Some("label"),
-            )
-            .unwrap(),
+            texture: Texture::from_frame(device, queue, bytes, Some("label")).unwrap(),
             bind_group: None,
             vertex_buffer: None,
             index_buffer: None,
         }
     }
 
-    pub fn create_vertex_buffer(&mut self, device: &Device)  {
+    pub fn create_vertex_buffer(&mut self, device: &Device) {
         let vertex_buffer = device.create_buffer_init(&wgpu::util::BufferInitDescriptor {
             label: Some("Image vertex buffer"),
             contents: bytemuck::cast_slice(&self.plane.vertices),

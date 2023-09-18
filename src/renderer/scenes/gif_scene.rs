@@ -1,12 +1,10 @@
-use std::time::{Instant, Duration};
+use std::time::{Duration, Instant};
 
-use wgpu::{CommandEncoder, TextureView, RenderPipeline};
+use wgpu::{CommandEncoder, RenderPipeline, TextureView};
 
 use crate::renderer::primitives::image::Image;
 
 use super::scene::Scene;
-
-
 
 pub struct GifScene {
     pub first_load: bool,
@@ -31,7 +29,6 @@ impl Scene for GifScene {
             self.time_till_next_frame = self.frames.get(0).unwrap().1.as_millis();
         }
 
-
         if self.time_loaded.is_some() {
             let time = self
                 .time_loaded
@@ -55,7 +52,6 @@ impl Scene for GifScene {
                     .as_millis();
             }
         }
-
 
         let mut render_pass = encoder.begin_render_pass(&wgpu::RenderPassDescriptor {
             label: Some("Render Pass"),
@@ -90,7 +86,4 @@ impl Scene for GifScene {
     }
 }
 
-
-impl GifScene {
-
-}
+impl GifScene {}

@@ -1,17 +1,15 @@
-use wgpu::{CommandEncoder, TextureView, RenderPipeline};
+use wgpu::{CommandEncoder, RenderPipeline, TextureView};
 
 use crate::renderer::primitives::image::Image;
 
 use super::scene::Scene;
-
-
 
 pub struct ImageScene {
     pub image: Image,
 }
 
 impl Scene for ImageScene {
-     fn render_scene(
+    fn render_scene(
         &mut self,
         encoder: &mut CommandEncoder,
         view: &TextureView,
@@ -49,6 +47,4 @@ impl Scene for ImageScene {
     }
 }
 
-impl ImageScene {
-  
-}
+impl ImageScene {}

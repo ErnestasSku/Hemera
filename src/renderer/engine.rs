@@ -168,7 +168,6 @@ impl Engine {
     pub fn load_scene(&mut self, a: bool) {
         if a {
             self.load_images();
-
         } else {
             self.load_gif();
         }
@@ -177,7 +176,8 @@ impl Engine {
     pub fn load_transition(&mut self) {
         let scene = self.scene.take().unwrap();
 
-        let mut transition = Transition::test(&self.device, &self.config, scene, self.config.format);
+        let mut transition =
+            Transition::test(&self.device, &self.config, scene, self.config.format);
         transition.create_index_buffer(&self.device);
         transition.create_vertex_buffer(&self.device);
 
@@ -265,8 +265,6 @@ impl Engine {
     }
 
     pub fn render(&mut self) -> Result<(), wgpu::SurfaceError> {
-
-
         let output = self.surface.get_current_texture()?;
 
         let view = output
@@ -289,7 +287,6 @@ impl Engine {
                 )
             }
         }
-
 
         {
             if let Some(transition) = self.transition.as_mut() {

@@ -79,7 +79,6 @@ pub async fn run() {
 
                         state.load_transition();
                         state.load_scene(transition_count % 2 == 1);
-
                     }
                     _ => {}
                 }

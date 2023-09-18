@@ -75,7 +75,6 @@ impl Plane {
         self
     }
 
-
     #[allow(dead_code)]
     pub fn get_vertices(&self) -> Vec<Vertex> {
         self.vertices.clone()

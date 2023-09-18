@@ -1,8 +1,7 @@
 use window::run;
 
-mod window;
 mod renderer;
-
+mod window;
 
 fn main() {
     pollster::block_on(run());
