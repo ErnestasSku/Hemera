@@ -8,7 +8,7 @@ Some basics are already implemented. Such as basic scenes (still early and will 
 
 
 ### Example of transition between 2 "gif scenes".
-![Transition example](files/hemera_mk6YUsg03O.gif)
+![Transition example](./files/hemera_mk6YUsg03O.gif)
 
 
 ### Future plans
