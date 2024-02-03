@@ -1,30 +1,30 @@
 use std::time::Duration;
 
 use bevy_ecs::prelude::*;
-use winit::{
-    event::Event,
-    event_loop::{EventLoop, EventLoopWindowTarget},
-    platform::pump_events::EventLoopExtPumpEvents,
-    window::WindowBuilder,
-};
+use event_loop::{AfterRenderSchedule, StartupSchedule, UpdateSchedule};
+use winit::{platform::pump_events::EventLoopExtPumpEvents, window::WindowBuilder};
 
-#[derive(Component)]
-struct Res1(i32);
+mod event_loop;
 
 fn main() {
-    let mut event_loop = EventLoop::new().unwrap();
+    let mut event_loop = winit::event_loop::EventLoop::new().unwrap();
     let _window = WindowBuilder::new().build(&event_loop).unwrap();
 
     let mut world = World::new();
 
-    let mut schedule = Schedule::default();
-    schedule.add_systems(hello_world);
+    // Schedules
+    let mut startup = Schedule::new(StartupSchedule);
+    let mut update = Schedule::new(UpdateSchedule);
+    let mut after_render = Schedule::new(AfterRenderSchedule);
+
+    startup.run(&mut world);
 
     loop {
+        update.run(&mut world);
+        after_render.run(&mut world);
+
         let pump_status =
             event_loop.pump_events(Some(Duration::from_millis(10)), winit_event_handler);
-
-        schedule.run(&mut world);
 
         match pump_status {
             winit::platform::pump_events::PumpStatus::Continue => {}
@@ -35,12 +35,11 @@ fn main() {
     }
 }
 
-fn hello_world() {
-    println!("Hello ecs");
-}
-
-fn winit_event_handler(event: Event<()>, elwt: &EventLoopWindowTarget<()>) {
-    if let Event::WindowEvent {
+fn winit_event_handler(
+    event: winit::event::Event<()>,
+    elwt: &winit::event_loop::EventLoopWindowTarget<()>,
+) {
+    if let winit::event::Event::WindowEvent {
         window_id: _,
         event,
     } = event
@@ -48,12 +47,11 @@ fn winit_event_handler(event: Event<()>, elwt: &EventLoopWindowTarget<()>) {
         match event {
             winit::event::WindowEvent::Resized(_) => {}
             winit::event::WindowEvent::Moved(_) => {}
-            winit::event::WindowEvent::CloseRequested => {
-                println!("exit");
-                elwt.exit()
-            }
+            winit::event::WindowEvent::CloseRequested => elwt.exit(),
             winit::event::WindowEvent::Destroyed => elwt.exit(),
-            winit::event::WindowEvent::RedrawRequested => {}
+            winit::event::WindowEvent::RedrawRequested => {
+                println!("Redraw");
+            }
             _ => {}
         }
     }
