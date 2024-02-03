@@ -3,6 +3,7 @@ use std::time::Duration;
 use bevy_ecs::prelude::*;
 use color_eyre::Report;
 use event_loop::{AfterRenderSchedule, StartupSchedule, UpdateSchedule};
+use renderer::render_context::RenderContext;
 use winit::{platform::pump_events::EventLoopExtPumpEvents, window::WindowBuilder};
 
 mod event_loop;
@@ -10,8 +11,12 @@ mod renderer;
 
 fn main() -> Result<(), Report> {
     setup()?;
-    let (mut event_loop, _window) = setup_winit();
+    let (mut event_loop, window) = setup_winit();
     let mut world = World::new();
+
+    //
+    let wgpu_resource = pollster::block_on(RenderContext::new_with_window(window));
+    world.insert_resource(wgpu_resource);
 
     // Schedules
     let mut startup = Schedule::new(StartupSchedule);
