@@ -7,6 +7,13 @@ edition = "2021"
 
 [dependencies]
 bevy_ecs = "0.12.1"
+color-eyre = "0.6.2"
+futures = "0.3.30"
 pollster = "0.3.0"
+tracing = "0.1.40"
+tracing-subscriber = { version = "0.3.18", features = [
+    "env-filter",
+    "tracing",
+] }
 wgpu = "0.19.1"
 winit = "0.29.10"

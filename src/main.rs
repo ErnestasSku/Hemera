@@ -1,15 +1,16 @@
 use std::time::Duration;
 
 use bevy_ecs::prelude::*;
+use color_eyre::Report;
 use event_loop::{AfterRenderSchedule, StartupSchedule, UpdateSchedule};
 use winit::{platform::pump_events::EventLoopExtPumpEvents, window::WindowBuilder};
 
 mod event_loop;
+mod renderer;
 
-fn main() {
-    let mut event_loop = winit::event_loop::EventLoop::new().unwrap();
-    let _window = WindowBuilder::new().build(&event_loop).unwrap();
-
+fn main() -> Result<(), Report> {
+    setup()?;
+    let (mut event_loop, _window) = setup_winit();
     let mut world = World::new();
 
     // Schedules
@@ -33,6 +34,33 @@ fn main() {
 
         std::thread::sleep(Duration::from_millis(10));
     }
+
+    Ok(())
+}
+
+fn setup() -> Result<(), Report> {
+    color_eyre::install()?;
+
+    tracing_subscriber::fmt::fmt()
+        .with_env_filter(tracing_subscriber::EnvFilter::from_default_env())
+        .init();
+
+    Ok(())
+}
+
+fn setup_winit() -> (winit::event_loop::EventLoop<()>, winit::window::Window) {
+    let event_loop = winit::event_loop::EventLoop::new().unwrap();
+    let monitor_handle = event_loop.available_monitors().next().unwrap();
+    let video_mode = monitor_handle
+        .video_modes()
+        .find(|p| p.size().width == 1920 && p.size().height == 1080)
+        .unwrap();
+
+    let window = WindowBuilder::new()
+        .with_fullscreen(Some(winit::window::Fullscreen::Exclusive(video_mode)))
+        .build(&event_loop)
+        .unwrap();
+    (event_loop, window)
 }
 
 fn winit_event_handler(
