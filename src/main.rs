@@ -9,19 +9,23 @@ use winit::{platform::pump_events::EventLoopExtPumpEvents, window::WindowBuilder
 mod event_loop;
 mod renderer;
 
+struct Scene;
+
 fn main() -> Result<(), Report> {
     setup()?;
     let (mut event_loop, window) = setup_winit();
     let mut world = World::new();
 
     //
-    let wgpu_resource = pollster::block_on(RenderContext::new_with_window(window));
-    world.insert_resource(wgpu_resource);
+    let render_context = pollster::block_on(RenderContext::new_with_window(window));
+    world.insert_resource(render_context);
 
     // Schedules
     let mut startup = Schedule::new(StartupSchedule);
     let mut update = Schedule::new(UpdateSchedule);
     let mut after_render = Schedule::new(AfterRenderSchedule);
+
+    update.add_systems(render_final);
 
     startup.run(&mut world);
 
@@ -43,6 +47,54 @@ fn main() -> Result<(), Report> {
     Ok(())
 }
 
+fn render_final(render_context: ResMut<RenderContext>) {
+    let output = &render_context.target;
+    match output {
+        renderer::render_context::RenderTarget::WindowSurface(surface) => {
+            let output = surface.get_current_texture().unwrap();
+            let view = output
+                .texture
+                .create_view(&wgpu::TextureViewDescriptor::default());
+            let mut encoder =
+                render_context
+                    .device
+                    .create_command_encoder(&wgpu::CommandEncoderDescriptor {
+                        label: Some("Render Encoder"),
+                    });
+
+            {
+                let _render_pass = encoder.begin_render_pass(&wgpu::RenderPassDescriptor {
+                    label: Some("Render Pass"),
+                    color_attachments: &[Some(wgpu::RenderPassColorAttachment {
+                        view: &view,
+                        resolve_target: None,
+                        ops: wgpu::Operations {
+                            load: wgpu::LoadOp::Clear(wgpu::Color {
+                                r: 0.1,
+                                g: 0.2,
+                                b: 0.3,
+                                a: 1.0,
+                            }),
+                            store: wgpu::StoreOp::Store,
+                        },
+                    })],
+                    depth_stencil_attachment: None,
+                    occlusion_query_set: None,
+                    timestamp_writes: None,
+                });
+            }
+
+            render_context
+                .queue
+                .submit(std::iter::once(encoder.finish()));
+            output.present();
+        }
+        renderer::render_context::RenderTarget::Texture(_texture) => {
+            // Todo
+        }
+    };
+}
+
 fn setup() -> Result<(), Report> {
     color_eyre::install()?;
 
@@ -56,13 +108,16 @@ fn setup() -> Result<(), Report> {
 fn setup_winit() -> (winit::event_loop::EventLoop<()>, winit::window::Window) {
     let event_loop = winit::event_loop::EventLoop::new().unwrap();
     let monitor_handle = event_loop.available_monitors().next().unwrap();
-    let video_mode = monitor_handle
+    let _video_mode = monitor_handle
         .video_modes()
         .find(|p| p.size().width == 1920 && p.size().height == 1080)
         .unwrap();
 
     let window = WindowBuilder::new()
-        .with_fullscreen(Some(winit::window::Fullscreen::Exclusive(video_mode)))
+        // .with_fullscreen(Some(winit::window::Fullscreen::Exclusive(video_mode)))
+        .with_fullscreen(Some(winit::window::Fullscreen::Borderless(Some(
+            monitor_handle,
+        ))))
         .build(&event_loop)
         .unwrap();
     (event_loop, window)

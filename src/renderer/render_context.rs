@@ -1,4 +1,5 @@
 use bevy_ecs::system::Resource;
+use tracing::debug;
 
 pub enum RenderTarget {
     WindowSurface(wgpu::Surface<'static>),
@@ -12,7 +13,7 @@ pub enum RenderConfig {
 
 #[derive(Resource)]
 pub struct RenderContext {
-    pub surface: RenderTarget,
+    pub target: RenderTarget,
     pub device: wgpu::Device,
     pub queue: wgpu::Queue,
     pub config: RenderConfig,
@@ -54,8 +55,9 @@ impl RenderContext {
 
         let texture = device.create_texture(&texture_desc);
 
+        debug!("Created Render context");
         Self {
-            surface: RenderTarget::Texture(texture),
+            target: RenderTarget::Texture(texture),
             device,
             queue,
             config: RenderConfig::TextureDescriptor(texture_desc),
@@ -104,8 +106,10 @@ impl RenderContext {
         };
 
         surface.configure(&device, &config);
+
+        debug!("Created Render context");
         Self {
-            surface: RenderTarget::WindowSurface(surface),
+            target: RenderTarget::WindowSurface(surface),
             device,
             queue,
             config: RenderConfig::SurfaceConfiguration(config),
@@ -128,4 +132,13 @@ impl RenderContext {
             label: None,
         }
     }
+}
+
+impl RenderTarget {
+    // pub fn get_current_texture(self) -> wgpu::Texture {
+    // match self {
+    // RenderTarget::WindowSurface(surface) => surface.get_current_texture().unwrap().texture,
+    // RenderTarget::Texture(texture) => todo!(),
+    // }
+    // }
 }
