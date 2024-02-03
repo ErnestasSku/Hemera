@@ -7,6 +7,7 @@ edition = "2021"
 
 [dependencies]
 bevy_ecs = "0.12.1"
+bytemuck = "1.14.1"
 color-eyre = "0.6.2"
 futures = "0.3.30"
 pollster = "0.3.0"
