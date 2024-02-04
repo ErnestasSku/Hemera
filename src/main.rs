@@ -9,7 +9,23 @@ use winit::{platform::pump_events::EventLoopExtPumpEvents, window::WindowBuilder
 mod event_loop;
 mod renderer;
 
+#[derive(Component)]
 struct Scene;
+
+#[derive(Component)]
+struct Entity;
+
+#[derive(Component)]
+struct Material {
+    bind_group: wgpu::BindGroup,
+}
+
+#[derive(Component)]
+struct Mesh {
+    vertex_buffer: wgpu::Buffer,
+    index_buffer: wgpu::Buffer,
+    num_elements: u32,
+}
 
 fn main() -> Result<(), Report> {
     setup()?;
